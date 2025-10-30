@@ -166,4 +166,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-*Ready to copy-paste? Just select the entire Markdown above and commit to your GitHub repo. If you need further tweaks (e.g., adding a GIF demo or CI badges), let me know!*
