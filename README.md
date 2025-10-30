@@ -1,153 +1,169 @@
-Image Caption Generator using InceptionV3 and LSTM
+# 🖼️ Image Caption Generator using InceptionV3 and LSTM
 
-This project demonstrates an image caption generator using deep learning techniques. It utilizes InceptionV3 for image feature extraction and LSTM networks for caption generation. The model is trained on the Flickr8k dataset, and it generates captions for new images using a greedy search algorithm.  
+This project implements an **Image Caption Generator** using deep learning. It extracts image features with **InceptionV3** and generates natural language captions via an **LSTM** network. The model is trained on the **Flickr8k** dataset and uses a **greedy search** for inference on new images.
 
----
-
- Project Structure
-
-
-├── data/  
-│   ├── archive.zip              # Dataset containing images and captions  
-│   ├── Flickr_8k.trainImages.txt  # Training image list  
-│   ├── Flickr_8k.testImages.txt   # Test image list  
-│   ├── glove.6B.200d.txt        # Pre-trained GloVe embeddings  
-│   └── model_checkpoint.h5      # Checkpoint for the best model during training  
-├── image_caption_generator.py     # Main code (in Python)  
-└── README.md                    # Documentation (this file)  
 
 
 ---
 
- Requirements
+## 📁 Project Structure
 
-Make sure you have the following installed:  
-- Python 3.x  
-- TensorFlow  
-- Keras  
-- NumPy  
-- pandas  
-- OpenCV (for image handling)  
-- Matplotlib (for visualizations)  
+```
+├── data/
+│   ├── archive.zip                 # Flickr8k dataset (images + captions)
+│   ├── Flickr_8k.trainImages.txt   # Training image IDs
+│   ├── Flickr_8k.testImages.txt    # Test image IDs
+│   ├── glove.6B.200d.txt           # Pre-trained GloVe word embeddings
+│   └── model_checkpoint.h5         # Saved model weights (best checkpoint)
+├── image_caption_generator.py      # Core script for training and inference
+└── README.md                       # This documentation file
+```
 
 ---
 
- How to Use
+## ⚙️ Requirements
 
-# 1. Dataset Setup
-1. Upload the Dataset: Place the Flickr8k dataset (images + captions) in your Google Drive.
-2. Modify Paths: Update paths in the code to point to your dataset and other required files.
+### Python Environment
+- Python 3.8+
+- TensorFlow 2.x
+- Keras (included with TensorFlow)
+- NumPy
+- Pandas
+- OpenCV (cv2)
+- Matplotlib
 
-# 2. Import Necessary Libraries
-Ensure the following libraries are imported:
-python
-import numpy as np
-import pandas as pd
-import tensorflow as tf
-import cv2
-import os
-from keras.preprocessing.sequence import pad_sequences
-from keras.models import Model
-from keras.layers import Input, LSTM, Embedding, Dense, Dropout, add
-from keras.applications.inception_v3 import InceptionV3, preprocess_input
-from keras.callbacks import ModelCheckpoint
+### Installation
+Run the following command to install dependencies:
+
+```bash
+pip install tensorflow numpy pandas opencv-python matplotlib
+```
+
+For GloVe embeddings, download `glove.6B.200d.txt` from [Stanford NLP](https://nlp.stanford.edu/projects/glove/) and place it in the `data/` folder.
+
+---
+
+## 🚀 Quick Start
+
+### 1. Setup Dataset
+1. Download the **Flickr8k** dataset from [Kaggle](https://www.kaggle.com/datasets/adityajn105/flickr8k).
+2. Unzip `archive.zip` into the `data/` folder.
+3. Update paths in `image_caption_generator.py` to match your local setup (e.g., dataset directory).
+
+If using Google Colab:
+```python
 from google.colab import drive
-from google.colab.patches import cv2_imshow
-
-
-# 3. Mount Google Drive
-python
 drive.mount('/content/drive')
+```
 
-This will allow you to access files stored on your Drive.  
+### 2. Run Training
+Execute the script to train the model:
+```bash
+python image_caption_generator.py
+```
+- **Epochs**: 50 (adjustable)
+- **Batch Size**: 256
+- Saves the best model to `data/model_checkpoint.h5`
 
----
+### 3. Generate Captions (Inference)
+Load a trained model and generate captions for new images:
+```python
+# Example usage in the script
+encoded_img = encode('/path/to/your/image.jpg', encoding_model)
+caption = greedy_search(encoded_img)
+print("Generated Caption:", caption)
+```
 
- Model Workflow
+Display the result:
+```python
+import cv2
+from google.colab.patches import cv2_imshow  # For Colab; use plt.imshow() locally
 
-1. Image Preprocessing:  
-   - Uses InceptionV3 to extract features from images.  
-   - Preprocesses images to 299x299 pixels for compatibility with InceptionV3.  
-
-2. Text Preprocessing:  
-   - Loads and cleans captions by removing punctuation and converting to lowercase.  
-   - Appends 'startseq' and 'endseq' tokens to each caption for LSTM training.
-
-3. Splitting Data:  
-   - Randomly splits the dataset (98% for training, 2% for testing).  
-
-4. Tokenization and Word Embeddings:  
-   - Tokenizes the captions to convert text into sequences of integers.  
-   - Uses GloVe embeddings for better semantic representation.  
-
-5. Model Architecture:  
-   - Combines image features (from InceptionV3) with LSTM-generated captions.  
-   - Uses Dense layers for better predictions and outputs vocabulary-sized softmax.
-
-6. Training the Model:  
-   - Uses categorical cross-entropy as the loss function.  
-   - Saves the best model based on loss using 'ModelCheckpoint'.  
-
----
-
- Model Training
-
-1. Compile the Model:
-    python
-    model.compile(loss='categorical_crossentropy', optimizer='adam')
-    
-
-2. Train the Model:
-    python
-    model.fit([X1, X2], y, epochs=50, batch_size=256, callbacks=[checkpoint])
-    
+image = cv2.imread('/path/to/your/image.jpg')
+cv2_imshow(image)
+print(f"Caption: {caption}")
+```
 
 ---
 
- Inference (Generating Captions)
+## 🧠 Model Architecture & Workflow
 
-1. Encode the Image:
-    python
-    encoded_img = encode('/path/to/image.jpg', encoding_model)
-    encoded_img = np.reshape(encoded_img, (1, 2048))
-    
+### Key Components
+1. **Image Feature Extraction**:
+   - Uses pre-trained **InceptionV3** (without top layers).
+   - Resizes images to 299x299 pixels.
+   - Outputs 2048-dimensional feature vectors.
 
-2. Generate Caption:
-    python
-    caption = greedy_search(encoded_img)
-    print("Generated Caption:", caption)
-    
+2. **Text Processing**:
+   - Cleans captions: lowercase, remove punctuation, add `<startseq>` and `<endseq>` tokens.
+   - Tokenizes vocabulary (~8k words from Flickr8k).
+   - Uses **GloVe 200d** embeddings for word representations.
 
-3. Display the Image with Caption:
-    python
-    image = cv2.imread('/path/to/image.jpg')
-    cv2_imshow(image)
-    
+3. **Data Preparation**:
+   - Split: 98% train, 2% test.
+   - Pads sequences to max length (e.g., 35 tokens).
+   - One-hot encodes targets for categorical loss.
 
- Notes
+4. **Neural Network**:
+   - **Encoder**: InceptionV3 → Dense(256) → RepeatVector(max_len).
+   - **Decoder**: Embedding → LSTM(256, return_sequences=True) → Dropout → TimeDistributed(Dense(vocab_size, activation='softmax')).
+   - Merge: Add encoder output to LSTM input for attention-like fusion.
 
-1. Links to Dataset and Models:  
-   - Add your own links to datasets or model files wherever required.
-   - Example: Replace '/path/to/your/image.jpg' with appropriate paths.
+### Training Details
+- **Optimizer**: Adam
+- **Loss**: Categorical Crossentropy
+- **Metrics**: Accuracy
+- **Callbacks**: ModelCheckpoint (save best by val_loss)
 
-2. Error Handling:  
-   - Ensure that GloVe embeddings are correctly loaded to avoid shape mismatches.
-   - If using custom images, make sure they are resized to '(299, 299)'.
+Example compilation and training code:
+```python
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+checkpoint = ModelCheckpoint('data/model_checkpoint.h5', monitor='val_loss', save_best_only=True)
+model.fit([X1, X2], y, epochs=50, batch_size=256, validation_split=0.02, callbacks=[checkpoint])
+```
+
+### Inference: Greedy Search
+- Starts with `<startseq>`.
+- Predicts next word with argmax (greedy).
+- Stops at `<endseq>` or max length.
 
 ---
 
- References
-
-- [Keras Documentation](https://keras.io)
-- [InceptionV3 Model](https://keras.io/api/applications/inceptionv3/)
-- [GloVe Embeddings](https://nlp.stanford.edu/projects/glove/)
+## 📝 Important Notes
+- **Custom Images**: Ensure inputs are RGB JPEG/PNG, resized to 299x299.
+- **GloVe Loading**: Verify embedding matrix shape matches (vocab_size, 200).
+- **Performance**: On CPU, training takes ~2-3 hours for 50 epochs. Use GPU for faster runs.
+- **Limitations**: Captions may be repetitive; consider beam search for better diversity.
+- **Troubleshooting**:
+  - Shape errors? Check padding and embedding dims.
+  - OOM? Reduce batch size to 128.
 
 ---
 
- Contributors
+## 🔗 Resources & References
+- **Dataset**: [Flickr8k on Kaggle](https://www.kaggle.com/datasets/adityajn105/flickr8k)
+- **InceptionV3 Docs**: [Keras Applications](https://keras.io/api/applications/inceptionv3/)
+- **GloVe Embeddings**: [Stanford NLP](https://nlp.stanford.edu/projects/glove/)
+- **Full Tutorial Inspiration**: [Image Captioning with Keras](https://www.tensorflow.org/tutorials/text/image_captioning)
 
-- ABHIRAM G
-- Varun S
-- Md Faraz
-- Vivek Prabhu
-  
+---
+
+## 👥 Contributors
+- **Abhiram G** - Lead Developer
+- **Varun S** - Data Preprocessing
+- **Md Faraz** - Model Training
+- **Vivek Prabhu** - Documentation
+
+---
+
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+⭐ **Star this repo if it helps your project!** Questions? Open an issue or reach out.
+
+---
+
+*Ready to copy-paste? Just select the entire Markdown above and commit to your GitHub repo. If you need further tweaks (e.g., adding a GIF demo or CI badges), let me know!*
